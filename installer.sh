@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Configuration for original setup
 HOME="/home/container"
 HOMEA="$HOME/linux/.apt"
 STAR1="$HOMEA/lib:$HOMEA/usr/lib:$HOMEA/var/lib:$HOMEA/usr/lib/x86_64-linux-gnu:$HOMEA/lib/x86_64-linux-gnu:$HOMEA/lib:$HOMEA/usr/lib/sudo"
@@ -15,96 +14,72 @@ export LD_LIBRARY_PATH=$STARALL
 export PATH="/bin:/usr/bin:/usr/local/bin:/sbin:$HOMEA/bin:$HOMEA/usr/bin:$HOMEA/sbin:$HOMEA/usr/sbin:$HOMEA/etc/init.d:$PATH"
 export BUILD_DIR=$HOMEA
 
-# Formatting for the banner
 bold=$(echo -en "\e[1m")
 nc=$(echo -en "\e[0m")
 lightblue=$(echo -en "\e[94m")
 lightgreen=$(echo -en "\e[92m")
 
-# ASCII Banner
 echo "
 ${bold}${lightgreen}███████╗ ██████╗███████╗████████╗ █████╗ ███████╗██╗   ██╗
 ${bold}${lightgreen}██╔════╝██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝╚██╗ ██╔╝
 ${bold}${lightgreen}█████╗  ██║     ███████╗   ██║   ███████║███████╗ ╚████╔╝ 
 ${bold}${lightgreen}██╔══╝  ██║     ╚════██║   ██║   ██╔══██║╚════██║  ╚██╔╝  
 ${bold}${lightgreen}███████╗╚██████╗███████║   ██║   ██║  ██║███████║   ██║   
-${bold}${lightgreen}╚══════╝ ╚═════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝   ╚═╝   
+${bold}${lightgreen}╚══════╝ ╚═════╝╚══════╝   ╚═╝   ╚═╝  ╚═   ═════╝   ╚═╝   
 "
 
-
-
-# Main Logic
 if [[ -f "./installed" ]]; then
     echo "${bold}${lightgreen}==> Started ${lightblue}Container${lightgreen} <=="
-    function runcmd1 {
-        printf "${bold}${lightgreen}Default${nc}@${lightblue}Container${nc}:~ "
-        read -r cmdtorun
-        ./libraries/proot -S . /bin/bash -c "$cmdtorun"
+    echo "Choose an option to continue:"
+    echo "1) Start Gotty web-based terminal"
+    echo "2) Interactive shell loop (runcmd)"
+    read -p "Enter your choice (1/2): " choice
+    if [[ "$choice" == "1" ]]; then
+        ./gotty -w bash
+    elif [[ "$choice" == "2" ]]; then
+        function runcmd1 {
+            printf "${bold}${lightgreen}Default${nc}@${lightblue}Container${nc}:~ "
+            read -r cmdtorun
+            ./libraries/proot -S . /bin/bash -c "$cmdtorun"
+            runcmd
+        }
+        function runcmd {
+            printf "${bold}${lightgreen}Default${nc}@${lightblue}Container${nc}:~ "
+            read -r cmdtorun
+            ./libraries/proot -S . /bin/bash -c "$cmdtorun"
+            runcmd1
+        }
         runcmd
-    }
-    function runcmd {
-        printf "${bold}${lightgreen}Default${nc}@${lightblue}Container${nc}:~ "
-        read -r cmdtorun
-        ./libraries/proot -S . /bin/bash -c "$cmdtorun"
-        runcmd1
-    }
-    runcmd
+    else
+        echo "Invalid choice, exiting."
+        exit 1
+    fi
 else
     echo "Downloading files for application"
     curl -sSLo ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip >/dev/null 2>err.log
-    echo -ne '#                   (5%)\r'
     curl -sSLo files.zip https://github.com/RealTriassic/Ptero-VM-JAR/releases/download/latest/files.zip >/dev/null 2>err.log
-    echo -ne '##                  (10%)\r'
-    curl -sSLo unzip https://raw.githubusercontent.com/afnan007a/Ptero-vm/main/unzip >/dev/null 2>err.log
-    echo -ne '####                (20%)\r'
-    curl -sSLo gotty https://raw.githubusercontent.com/afnan007a/Replit-Vm/main/gotty >/dev/null 2>err.log
-    echo -ne '#####               (25%)\r'
+    curl -sSLo unzip https://raw.githubusercontent.com/BheemKiGoli/love/blob/main/unzip >/dev/null 2>err.log
+    curl -sSLo gotty https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz >/dev/null 2>err.log
     chmod +x unzip >/dev/null 2>err.log
     export PATH="/bin:/usr/bin:/usr/local/bin:/sbin:$HOMEA/bin:$HOMEA/usr/bin:$HOMEA/sbin:$HOMEA/usr/sbin:$HOMEA/etc/init.d:$PATH"
     ./unzip ngrok.zip >/dev/null 2>err.log
-    echo -ne '######               (30%)\r'
     ./unzip files.zip >/dev/null 2>err.log
-    echo -ne '#######              (35%)\r'
-    ./unzip root.zip
-    tar -xf root.tar.gz >/dev/null 2>err.log
-    echo -ne '########             (40%)\r'
+    tar -xf gotty_linux_amd64.tar.gz -C ./ >/dev/null 2>err.log
     chmod +x ./libraries/proot >/dev/null 2>err.log
-    echo -ne '#########            (45%)\r'
     chmod +x ngrok >/dev/null 2>err.log
-    echo -ne '##########           (50%)\r'
     chmod +x gotty >/dev/null 2>err.log
-    echo -ne '###########          (55%)\r'
     rm -rf files.zip >/dev/null 2>err.log
-    rm -rf root.zip >/dev/null 2>err.log
-    rm -rf root.tar.gz >/dev/null 2>err.log
+    rm -rf gotty_linux_amd64.tar.gz >/dev/null 2>err.log
     rm -rf ngrok.zip >/dev/null 2>err.log
-    echo -ne '####################(100%)\r'
-    echo -ne '\n'
     touch installed
     echo "
-
 ${bold}${lightgreen}███████╗ ██████╗███████╗████████╗ █████╗ ███████╗██╗   ██╗
 ${bold}${lightgreen}██╔════╝██╔════╝██╔════╝╚══██╔══╝██╔══██╗██╔════╝╚██╗ ██╔╝
 ${bold}${lightgreen}█████╗  ██║     ███████╗   ██║   ███████║███████╗ ╚████╔╝ 
 ${bold}${lightgreen}██╔══╝  ██║     ╚════██║   ██║   ██╔══██║╚════██║  ╚██╔╝  
 ${bold}${lightgreen}███████╗╚██████╗███████║   ██║   ██║  ██║███████║   ██║   
-${bold}${lightgreen}╚══════╝ ╚═════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝   ╚═╝   
+${bold}${lightgreen}╚══════╝ ╚═════╝╚══════╝   ╚═╝   ╚═╝  ╚══   ════╝   ╚═╝   
 "
-
-echo "${nc}"
-    
-    echo "${bold}${lightgreen}==> Started ${lightblue}Container${lightgreen} <=="
-    function runcmd1 {
-        printf "${bold}${lightgreen}Default${nc}@${lightblue}Container${nc}:~ "
-        read -r cmdtorun
-        ./libraries/proot -S . /bin/bash -c "$cmdtorun"
-        runcmd
-    }
-    function runcmd {
-        printf "${bold}${lightgreen}Default${nc}@${lightblue}Container${nc}:~ "
-        read -r cmdtorun
-        ./libraries/proot -S . /bin/bash -c "$cmdtorun"
-        runcmd1
-    }
-    runcmd
+    echo "${nc}"
+    ./gotty -w bash
 fi
